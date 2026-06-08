@@ -96,6 +96,16 @@ A self-contained variant using n8n's native form (no external page) is in
 - Let the reviewer edit every field (products, summary), not just the names.
 - A small eval set of transcripts to catch prompt regressions.
 
+## Analytics and a learning loop (where this goes next)
+Because every call becomes a structured record (territory, product line, risk flags,
+priority, confidence), the data turns into a manager's view with little extra work:
+- **KPIs / dashboard:** leads by territory and by product line, pipeline by priority, the
+  share of deals carrying a pricing or competitor risk, and review and approval rates.
+- **A learning loop:** the reviewer's edits are ground-truth corrections, so I would track
+  where the LLM missed (its confidence versus what the human changed), measure how many
+  records are safe to auto-approve, and feed those corrections back as few-shot examples to
+  sharpen extraction over time.
+
 ## Open question for the team
 For low-confidence records, should they be **written and flagged for follow-up**, or **held
 back** until a human completes them? I implemented *flag and save* so nothing is lost, and I'm
