@@ -1,85 +1,79 @@
 # Sales-call transcript → CRM (with human approval)
 
 An n8n automation that turns a sales-call transcript into a clean record in a system of
-record, with a human approval step in the middle.
+record, with a human review/approval step in the middle. Tailored to **Bell & McCoy
+Integrated Solutions** — a lighting & home-automation manufacturers' rep agency.
+
+**Live demo (review UI on GitHub Pages):** https://smesapachon.github.io/transcript-to-crm-n8n/
 
 ## What it does
 
 ```
-Form (paste transcript)
-  → Build LLM request
-  → LLM extract (OpenAI, strict JSON)
-  → Validate & flag gaps (missing fields, confidence, needs-review)
-  → Human review form (edit fields + Approve/Reject)
-  → IF approved
-        → INSERT into Postgres (Supabase)  → "Saved" page
-     else
-        → "Rejected" page (nothing written)
+GitHub Pages (paste transcript)
+  → POST /webhook/transcript-extract
+      n8n: Normalize → LLM extract → Validate & flag gaps
+      → responds with the extracted fields
+  → GitHub Pages renders an editable review card (boxes, colors, badges)
+  → human edits + Approve / Reject
+  → POST /webhook/transcript-save
+      n8n: Apply edits → IF approved → INSERT (Supabase) → email the territory rep
 ```
 
-The LLM extracts: **account/company name, contact name, a 2–3 sentence summary, action
-items, and an order/quote intent**. Everything is shown to a human for review before it
-is saved — and the human can correct fields inline (e.g. type the company name the call
-never stated) before approving.
+The LLM extracts: **company, contact, a 2–3 sentence summary, action items, order/quote
+intent**, plus domain classification and risk flags (see below). Nothing is written until a
+human reviews it — and the reviewer can correct fields inline before approving.
 
 ## Stack
-
-- **n8n** (self-hosted) — orchestration + the two forms (intake + approval).
+- **n8n** (cloud) — orchestration, two webhooks (extract + save).
 - **OpenAI** `gpt-4o-mini`, `temperature 0`, `response_format: json_object` — extraction.
-- **Supabase / Postgres** — system of record (`db/schema.sql`).
+- **Supabase / Postgres** — system of record.
+- **GitHub Pages** — the input + review UI (`docs/index.html`), full design control.
+- **Gmail** — notifies the territory rep on approval.
 
 ## Key decisions
+1. **Never invent; flag instead.** The prompt forces `null` + a `missing_or_ambiguous`
+   list rather than guessing. A `Validate` step turns that into a `confidence` level and a
+   *NEEDS REVIEW* banner — this is how the messy transcript is handled (no hallucinated
+   part numbers).
+2. **Domain classification for a rep agency.** Beyond the generic fields, the extractor
+   adds `customer_type`, `product_category`, `territory_state`, `project_name`, `priority`
+   and `risk_flags` — because a manufacturers' rep routes leads by territory/line and
+   tracks account risk (pricing objections, competitor mentions). This makes the record
+   actionable for *their* business, not a generic CRM dump.
+3. **Approval that lets you fix, not just accept/reject.** The review UI is editable; an
+   empty override keeps the extracted value, a typed value wins.
+4. **External review UI for full UX control.** The n8n form sandbox strips styling, so the
+   review screen is a GitHub Pages app talking to n8n via two webhooks — giving a branded,
+   boxed, color-coded card.
 
-1. **Never invent; flag instead.** The prompt forces the model to return `null` + a
-   `missing_or_ambiguous` list rather than guessing. A `Validate` step turns that into a
-   `confidence` level and a `needs_review` flag, and the approval form shows a
-   *NEEDS REVIEW* banner listing exactly which fields are missing. This is how the messy
-   transcript is handled — no hallucinated part numbers.
-2. **Approval that lets you fix, not just accept/reject.** The human step is an editable
-   form: empty overrides keep the extracted value; a typed value wins. This mirrors how a
-   real CRM operator works a thin lead.
-3. **A real database as the system of record.** Postgres (not a sheet) so the record has a
-   typed schema, a `status` column, and `jsonb` for action items / order intent — closer to
-   a production CRM table.
-
-## Handling the messy transcript (#2)
-
-Danny's call has no company name, no part numbers, and references a prior "school job".
-The automation:
-- sets `company_name = null`, `contact_name = "Danny"`,
-- marks `order_intent.present = true` but leaves `products` empty, noting the prior-deal
-  reference instead of inventing items,
-- captures the **pricing objection**, the **callback request**, and the **deadline** as
-  action items,
-- sets `confidence = low`, `needs_human_review = true`, and routes to the review form with
-  the missing fields surfaced for the human to complete before saving.
+## Handling the messy transcript
+Danny's voicemail has no company, no part numbers, references a prior "school job" and a
+pricing complaint. The automation: sets company `null`, marks `order_intent.present=true`
+with empty products (noting the prior-deal reference), captures the pricing objection as a
+`risk_flag`, sets `confidence=low` / `needs_human_review=true`, and routes to the review UI
+with the gaps surfaced for the human to complete.
 
 ## Run it
+1. Create the table — see `db/schema.sql` (the JSON/array fields are stored as `text`).
+2. Import `workflow/transcript-to-crm-external.json` into n8n.
+3. Connect credentials: OpenAI, Postgres (Supabase), Gmail; set the rep's email on *Notify Rep*.
+4. Activate the workflow, copy the two production webhook URLs into `docs/index.html` (`EXTRACT_URL`, `SAVE_URL`).
+5. Open the GitHub Pages URL, paste a transcript from `samples/`, review, approve.
 
-1. Create the table: run `db/schema.sql` in Supabase (SQL editor).
-2. Import `workflow/transcript-to-crm.json` into n8n.
-3. Set two credentials: **OpenAI** (on `LLM Extract`) and **Postgres** (on `Insert into CRM`,
-   using the Supabase connection string).
-4. Open the form trigger URL, paste a transcript from `samples/`, submit, review, approve.
+> A self-contained, single-workflow variant using n8n's native form (no external page) is in
+> `workflow/transcript-to-crm.json`.
 
 ## What I'd add before production
-
-- **Async / different approver:** swap the in-session review form for *Wait + email/Slack
-  approval* so a manager can approve later from their inbox (the rest of the flow is identical).
-- **Idempotency:** dedupe on a natural key (e.g. transcript hash) so re-runs don't create
-  duplicate records — same pattern I use elsewhere with a unique document id.
-- **Retries + error branch** on the LLM call, and a dead-letter for un-parseable responses.
-- **Schema-enforced output** via function/tool calling instead of prompt-only JSON.
-- Salesforce as the system of record if that is the target CRM.
+- **Account-history lookup** to resolve "same as the school job" against prior orders (repeat business is core to a rep agency).
+- **Product/SKU catalog matching** (e.g. map "40 wireless dimmers" to Lutron part numbers).
+- **Auto-route to the territory rep** based on `territory_state`; draft-quote generation from `order_intent`.
+- Idempotency (dedupe by transcript hash), retries + dead-letter on the LLM call, and the service key behind a credential.
 
 ## What I'd do differently with more time
-
-- Let the reviewer edit *every* field (products, summary) from the form, not just the names.
-- Add a lightweight eval set of transcripts to catch prompt regressions.
-- Auto-link to the referenced prior deal ("school job") instead of just flagging it.
+- Let the reviewer edit every field (products, summary), not just the names.
+- A small eval set of transcripts to catch prompt regressions.
 
 ## Open question for the team
-
-For low-confidence records, should they still be **written and flagged for follow-up**, or
-**held back entirely** until a human completes them? I implemented *flag and save* so nothing
-is lost — happy to match your team's preference.
+For low-confidence records, should they be **written and flagged for follow-up**, or **held
+back** until a human completes them? I implemented *flag and save* so nothing is lost — happy
+to match your process. And should records auto-route to the territory rep by state?
