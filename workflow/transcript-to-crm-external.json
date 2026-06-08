@@ -1,0 +1,377 @@
+{
+  "name": "Transcript to CRM (external pages)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "transcript-extract",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "wh-extract-0001",
+      "name": "Webhook Extract",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        0
+      ],
+      "webhookId": "wh-extract-aaaa"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst transcript = (b.transcript || b.text || '').toString().trim();\nif (!transcript) { throw new Error('No transcript provided.'); }\nconst source = (b.source || 'manual').toString();\n\nconst SYSTEM_PROMPT = [\n  'You are a sales-call data extraction assistant for Bell & McCoy Integrated Solutions, a lighting and home-automation manufacturers rep agency serving the luxury home market. Read the transcript and return ONLY one valid JSON object, no markdown. Keys:',\n  '- company_name: account/company name, or null',\n  '- contact_name: the person name, or null',\n  '- summary: 2 to 3 factual sentences, no invented details',\n  '- action_items: array of short imperative strings; empty array if none',\n  '- order_intent: object with present (boolean), products (array of objects with name and quantity), timeline (string or null), notes (string or null)',\n  '- project_name: the project or job the call is about, or null',\n  '- customer_type: caller role, one of: architect, designer, builder, home automation integrator, window treatment, landscape, contractor, homeowner, other',\n  '- product_category: best-fit line, one of: lighting control, automated shading, LED and architectural lighting, landscape lighting, outdoor audio, whole-home surge, outdoor living, other',\n  '- territory_state: the US state the project is in (2-letter code), or null',\n  '- priority: high, medium, or low (high when there is a tight deadline or the deal is being pushed)',\n  '- risk_flags: array using ONLY these values: pricing_objection, late_delivery_complaint, competitor_mentioned, timeline_risk, spec_change; empty array if none',\n  '- missing_or_ambiguous: array of field names you could not confidently fill',\n  '- confidence: one of high, medium, low',\n  '- needs_human_review: boolean',\n  '',\n  'Rules:',\n  '- Never invent facts. If a value is not clearly stated, use null (or empty array, or present false) and add the field name to missing_or_ambiguous.',\n  '- If the caller references a previous deal instead of specifics (for example same as the school job, or do what you did before), do not guess products: set order_intent.present true, leave products empty, and explain the reference in notes and in missing_or_ambiguous.',\n  '- Record pricing objections, deadlines and callback requests as action_items.',\n  '- Add a risk flag only when clearly supported by the transcript.',\n  '- For customer_type and product_category pick the closest option; if unclear use other.',\n  '- Set needs_human_review true and confidence low whenever company_name or contact_name is missing, or products or quantities are implied but unknown.',\n  'Return only the JSON object.'\n].join('\\n');\n\nconst body = {\n  model: 'gpt-4o-mini', temperature: 0,\n  response_format: { type: 'json_object' },\n  messages: [\n    { role: 'system', content: SYSTEM_PROMPT },\n    { role: 'user', content: 'Transcript:\\n\\n' + transcript }\n  ]\n};\n\nreturn [{ json: { transcript, source, received_at: new Date().toISOString(), body } }];"
+      },
+      "id": "norm-0001",
+      "name": "Normalize & Build Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "llm-0001",
+      "name": "LLM Extract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        0
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "O18ugvmCOzOd8rTa",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet content = '';\ntry { content = raw.choices[0].message.content; } catch (e) { content = ''; }\ncontent = (content || '').replace(/```json/gi, '').replace(/```/g, '').trim();\n\nlet data; let parseError = false;\ntry { data = JSON.parse(content); } catch (e) { data = {}; parseError = true; }\n\nconst norm = $('Normalize & Build Request').first().json;\n\nconst missing = Array.isArray(data.missing_or_ambiguous) ? data.missing_or_ambiguous.slice() : [];\nif (!data.company_name && missing.indexOf('company_name') === -1) missing.push('company_name');\nif (!data.contact_name && missing.indexOf('contact_name') === -1) missing.push('contact_name');\n\nconst confidence = data.confidence || (parseError ? 'low' : 'medium');\nconst needsReview = parseError || data.needs_human_review === true || missing.length > 0 || confidence === 'low';\n\nreturn [{ json: { extracted: data, missing, confidence, needs_review: needsReview, transcript: norm.transcript, source: norm.source } }];"
+      },
+      "id": "val-0001",
+      "name": "Validate & Flag Gaps",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { extracted: $json.extracted, missing: $json.missing, confidence: $json.confidence, needs_review: $json.needs_review, transcript: $json.transcript, source: $json.source } }}",
+        "options": {}
+      },
+      "id": "resp-extract-0001",
+      "name": "Respond Extract",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "transcript-save",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "wh-save-0001",
+      "name": "Webhook Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        320
+      ],
+      "webhookId": "wh-save-bbbb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst ex = b.extracted || {};\n\nconst company = (b.company_name || ex.company_name || '').toString().trim() || null;\nconst contact = (b.contact_name || ex.contact_name || '').toString().trim() || null;\nconst decision = (b.decision || 'Reject').toString();\nconst approved = decision.toLowerCase().indexOf('approve') !== -1;\nconst notes = (b.reviewer_notes || '').toString();\nconst territory = ex.territory_state || 'n/a';\nconst prio = ex.priority || 'n/a';\n\nlet missing = Array.isArray(b.missing) ? b.missing.slice() : (Array.isArray(ex.missing_or_ambiguous) ? ex.missing_or_ambiguous.slice() : []);\nif (company) missing = missing.filter(m => m !== 'company_name');\nif (contact) missing = missing.filter(m => m !== 'contact_name');\n\nconst notifyBody = [\n  'A new sales-call opportunity was approved in the CRM.',\n  '',\n  'Account:       ' + (company || 'Unknown'),\n  'Contact:       ' + (contact || 'n/a'),\n  'Project:       ' + (ex.project_name || 'n/a'),\n  'Territory:     ' + territory,\n  'Product line:  ' + (ex.product_category || 'n/a'),\n  'Customer type: ' + (ex.customer_type || 'n/a'),\n  'Priority:      ' + prio,\n  'Risk flags:    ' + ((ex.risk_flags || []).join(', ') || 'none'),\n  '',\n  'Summary: ' + (ex.summary || ''),\n  '',\n  'Reviewer notes: ' + (notes || '(none)')\n].join('\\n');\n\nreturn [{ json: {\n  decision, approved, reviewer_notes: notes,\n  notify: {\n    subject: 'New opportunity — ' + (company || 'Unknown') + ' (' + territory + ', ' + prio + ' priority)',\n    body: notifyBody\n  },\n  record: {\n    company_name: company,\n    contact_name: contact,\n    summary: ex.summary || null,\n    action_items: JSON.stringify(ex.action_items || []),\n    order_intent: JSON.stringify(ex.order_intent || {}),\n    project_name: ex.project_name || null,\n    customer_type: ex.customer_type || null,\n    product_category: ex.product_category || null,\n    territory_state: ex.territory_state || null,\n    priority: ex.priority || null,\n    risk_flags: JSON.stringify(ex.risk_flags || []),\n    missing_fields: JSON.stringify(missing),\n    confidence: b.confidence || 'low',\n    status: approved ? 'approved' : 'rejected',\n    source: b.source || 'manual',\n    raw_transcript: b.transcript || ''\n  }\n} }];"
+      },
+      "id": "apply-0001",
+      "name": "Apply Edits & Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-approved",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-0001",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sales_call_records",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $json.record.company_name }}",
+            "contact_name": "={{ $json.record.contact_name }}",
+            "summary": "={{ $json.record.summary }}",
+            "action_items": "={{ $json.record.action_items }}",
+            "order_intent": "={{ $json.record.order_intent }}",
+            "project_name": "={{ $json.record.project_name }}",
+            "customer_type": "={{ $json.record.customer_type }}",
+            "product_category": "={{ $json.record.product_category }}",
+            "territory_state": "={{ $json.record.territory_state }}",
+            "priority": "={{ $json.record.priority }}",
+            "risk_flags": "={{ $json.record.risk_flags }}",
+            "missing_fields": "={{ $json.record.missing_fields }}",
+            "confidence": "={{ $json.record.confidence }}",
+            "status": "={{ $json.record.status }}",
+            "source": "={{ $json.record.source }}",
+            "raw_transcript": "={{ $json.record.raw_transcript }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "ins-0001",
+      "name": "Insert into CRM",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -460,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "QkjgPQlwGGu4HFmK",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL@gmail.com",
+        "subject": "={{ $('Apply Edits & Decision').first().json.notify.subject }}",
+        "emailType": "text",
+        "message": "={{ $('Apply Edits & Decision').first().json.notify.body }}",
+        "options": {}
+      },
+      "id": "gmail-0001",
+      "name": "Notify Rep",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        220
+      ],
+      "webhookId": "gmail-cccc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_GMAIL_CRED",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'saved', message: 'Record approved and written to the CRM.' } }}",
+        "options": {}
+      },
+      "id": "resp-saved-0001",
+      "name": "Respond Saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -20,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'rejected', message: 'Record rejected. Nothing saved.' } }}",
+        "options": {}
+      },
+      "id": "resp-rej-0001",
+      "name": "Respond Rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -460,
+        420
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Extract": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Build Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Build Request": {
+      "main": [
+        [
+          {
+            "node": "LLM Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Extract": {
+      "main": [
+        [
+          {
+            "node": "Validate & Flag Gaps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Flag Gaps": {
+      "main": [
+        [
+          {
+            "node": "Respond Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Save": {
+      "main": [
+        [
+          {
+            "node": "Apply Edits & Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Edits & Decision": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Insert into CRM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert into CRM": {
+      "main": [
+        [
+          {
+            "node": "Notify Rep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Rep": {
+      "main": [
+        [
+          {
+            "node": "Respond Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

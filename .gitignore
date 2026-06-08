@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+*.env
+credentials*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# n8n local data (if you self-host alongside)
+.n8n/

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Call → CRM · Bell & McCoy Integrated Solutions</title>
+<style>
+  :root{
+    --navy:#1f3a5f; --navy2:#16293f; --amber:#f59e0b; --green:#16a34a; --red:#dc2626;
+    --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0; --ink:#1e293b; --muted:#64748b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px}
+  header h1{font-size:18px;margin:0}
+  header p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 14px rgba(15,23,42,.06);padding:22px;margin-bottom:18px}
+  label{display:block;font-weight:600;font-size:13px;margin:0 0 6px}
+  textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:inherit;color:var(--ink)}
+  textarea{min-height:150px;resize:vertical}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .btn{appearance:none;border:0;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;color:#fff;background:var(--navy)}
+  .btn:hover{background:var(--navy2)} .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.green{background:var(--green)} .btn.green:hover{background:#15803d}
+  .btn.ghost{background:#fff;color:var(--red);border:1px solid var(--red)} .btn.ghost:hover{background:#fef2f2}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .hidden{display:none}
+  /* review */
+  .banner{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;font-weight:700;margin-bottom:14px}
+  .banner.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+  .banner.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+  .miss{font-weight:500;font-size:13px;margin-top:2px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+  .badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+  .badge.flag::before{content:"🚩 "}
+  .grid{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:14px;margin:6px 0 4px}
+  .grid .k{color:var(--muted);font-weight:600}
+  .sec{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12.5px;background:#eef2f7;border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+  ul.clean{margin:6px 0;padding-left:20px} ul.clean li{margin:3px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .pill.high{background:#fee2e2;color:#991b1b} .pill.medium{background:#fef3c7;color:#92400e} .pill.low{background:#e2e8f0;color:#475569}
+  .editbox{background:#f8fafc;border:1px dashed var(--line);border-radius:12px;padding:14px;margin-top:14px}
+  .spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{font-size:13px;margin-top:10px} .toast.err{color:var(--red)}
+  .done{text-align:center;padding:24px}
+  .done .big{font-size:44px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">B&amp;M</div>
+    <div>
+      <h1>Sales Call → CRM</h1>
+      <p>Bell &amp; McCoy Integrated Solutions · lead intake &amp; review</p>
+    </div>
+  </header>
+
+  <!-- VIEW 1: INPUT -->
+  <section id="view-input">
+    <div class="card">
+      <label for="transcript">Sales-call transcript</label>
+      <textarea id="transcript" placeholder="Paste the transcript of the call (or voicemail)…"></textarea>
+      <div class="hint">An LLM extracts company, contact, summary, action items, order intent, product line, territory, priority and risk flags — then routes it here for your review before anything is saved.</div>
+      <label for="source" style="margin-top:14px">Source (optional)</label>
+      <input type="text" id="source" placeholder="e.g. phone call, voicemail, Zoom">
+      <div class="row">
+        <button class="btn" id="extractBtn" onclick="extract()">Extract &amp; review</button>
+      </div>
+      <div class="toast" id="inputToast"></div>
+    </div>
+  </section>
+
+  <!-- VIEW 2: REVIEW -->
+  <section id="view-review" class="hidden">
+    <div class="card" id="reviewCard"></div>
+  </section>
+
+  <!-- VIEW 3: DONE -->
+  <section id="view-done" class="hidden">
+    <div class="card done" id="doneCard"></div>
+  </section>
+</div>
+
+<script>
+  // ====== CONFIG: paste your n8n production webhook URLs here ======
+  const EXTRACT_URL = "https://servicioscao1.app.n8n.cloud/webhook/transcript-extract";
+  const SAVE_URL    = "https://servicioscao1.app.n8n.cloud/webhook/transcript-save";
+  // ================================================================
+
+  let DATA = null; // holds the extract response
+
+  const $ = id => document.getElementById(id);
+  const esc = s => (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const show = id => $(id).classList.remove("hidden");
+  const hide = id => $(id).classList.add("hidden");
+
+  async function extract(){
+    const transcript = $("transcript").value.trim();
+    const source = $("source").value.trim() || "manual";
+    if(!transcript){ $("inputToast").className="toast err"; $("inputToast").textContent="Please paste a transcript."; return; }
+    const btn = $("extractBtn");
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Extracting…';
+    $("inputToast").textContent = "";
+    try{
+      const r = await fetch(EXTRACT_URL, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcript,source})});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      DATA = await r.json();
+      renderReview();
+      hide("view-input"); show("view-review");
+      window.scrollTo(0,0);
+    }catch(e){
+      $("inputToast").className="toast err";
+      $("inputToast").textContent = "Could not reach the workflow: "+e.message+". Check the webhook URL is active.";
+    }finally{
+      btn.disabled=false; btn.textContent="Extract & review";
+    }
+  }
+
+  function renderReview(){
+    const ex = DATA.extracted || {};
+    const miss = DATA.missing || [];
+    const needs = DATA.needs_review;
+    const conf = DATA.confidence || "low";
+    const risks = ex.risk_flags || [];
+    const oi = ex.order_intent || {};
+    const prods = (oi.products||[]);
+
+    const banner = needs
+      ? `<div class="banner warn"><span>⚠️</span><div>NEEDS REVIEW${miss.length?`<div class="miss">Missing / ambiguous: ${esc(miss.join(", "))}</div>`:""}</div></div>`
+      : `<div class="banner ok"><span>✅</span><div>Looks complete</div></div>`;
+
+    const badges = risks.length
+      ? `<div class="badges">${risks.map(r=>`<span class="badge flag">${esc(r)}</span>`).join("")}</div>` : "";
+
+    const items = (ex.action_items||[]);
+    const itemsHtml = items.length ? `<ul class="clean">${items.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>` : `<div class="hint">None</div>`;
+    const prodHtml = prods.length ? `<ul class="clean">${prods.map(p=>`<li>${esc(p.name)}${p.quantity?` · <b>×${esc(p.quantity)}</b>`:""}</li>`).join("")}</ul>` : `<div class="hint">None specified</div>`;
+
+    $("reviewCard").innerHTML = `
+      ${banner}${badges}
+      <div class="grid">
+        <div class="k">Company</div><div>${ex.company_name?esc(ex.company_name):'<span style="color:var(--red)">(missing)</span>'}</div>
+        <div class="k">Contact</div><div>${ex.contact_name?esc(ex.contact_name):'<span style="color:var(--red)">(missing)</span>'}</div>
+        <div class="k">Confidence</div><div><span class="pill ${esc(conf)}">${esc(conf)}</span></div>
+      </div>
+      <div class="sec">Routing &amp; classification</div>
+      <div class="chips">
+        <span class="chip">👤 ${esc(ex.customer_type||"unknown")}</span>
+        <span class="chip">💡 ${esc(ex.product_category||"unknown")}</span>
+        <span class="chip">📍 ${esc(ex.territory_state||"?")}</span>
+        <span class="chip">🏗️ ${esc(ex.project_name||"no project")}</span>
+        <span class="chip">⚑ priority: <b>${esc(ex.priority||"n/a")}</b></span>
+      </div>
+      <div class="sec">Summary</div>
+      <div>${esc(ex.summary||"(none)")}</div>
+      <div class="sec">Action items</div>
+      ${itemsHtml}
+      <div class="sec">Order intent ${oi.present?"· YES":"· no"}</div>
+      ${prodHtml}
+      <div class="grid" style="margin-top:8px">
+        <div class="k">Timeline</div><div>${esc(oi.timeline||"(none)")}</div>
+        <div class="k">Notes</div><div>${esc(oi.notes||"(none)")}</div>
+      </div>
+
+      <div class="editbox">
+        <div class="sec" style="margin-top:0">Reviewer — correct &amp; decide</div>
+        <label>Company name (override if missing/wrong)</label>
+        <input type="text" id="ov_company" value="${ex.company_name?esc(ex.company_name):""}" placeholder="Type the company name…">
+        <label style="margin-top:10px">Contact name (override)</label>
+        <input type="text" id="ov_contact" value="${ex.contact_name?esc(ex.contact_name):""}">
+        <label style="margin-top:10px">Reviewer notes</label>
+        <input type="text" id="ov_notes" placeholder="Optional notes…">
+        <div class="row">
+          <button class="btn green" id="approveBtn" onclick="decide('Approve')">✓ Approve &amp; save</button>
+          <button class="btn ghost" onclick="decide('Reject')">✕ Reject</button>
+          <button class="btn" style="background:#475569" onclick="backToInput()">← Back</button>
+        </div>
+        <div class="toast" id="reviewToast"></div>
+      </div>`;
+  }
+
+  function backToInput(){ hide("view-review"); show("view-input"); }
+
+  async function decide(decision){
+    const payload = {
+      decision,
+      company_name: $("ov_company").value.trim(),
+      contact_name: $("ov_contact").value.trim(),
+      reviewer_notes: $("ov_notes").value.trim(),
+      extracted: DATA.extracted,
+      missing: DATA.missing,
+      confidence: DATA.confidence,
+      transcript: DATA.transcript,
+      source: DATA.source
+    };
+    const btn = $("approveBtn");
+    if(decision==="Approve"){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving…'; }
+    $("reviewToast").textContent="";
+    try{
+      const r = await fetch(SAVE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      const res = await r.json();
+      const ok = (res.status==="saved");
+      $("doneCard").innerHTML = ok
+        ? `<div class="big">✅</div><h2>Saved to CRM</h2><p class="hint">${esc(res.message||"")}</p><button class="btn" onclick="location.reload()">New transcript</button>`
+        : `<div class="big">🗑️</div><h2>Rejected</h2><p class="hint">${esc(res.message||"")}</p><button class="btn" onclick="location.reload()">New transcript</button>`;
+      hide("view-review"); show("view-done"); window.scrollTo(0,0);
+    }catch(e){
+      $("reviewToast").className="toast err";
+      $("reviewToast").textContent="Could not save: "+e.message;
+      if(decision==="Approve"){ btn.disabled=false; btn.textContent="✓ Approve & save"; }
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+/* Paste this into the Form Trigger node → Options → Custom CSS.
+   The n8n form Custom HTML element strips inline `style`, so the review
+   preview (built in code/validate.js as preview_html) uses class names
+   that are styled here. Applies to all pages of the form. */
+
+.rev-card { border:1px solid #e5e7eb; border-radius:12px; padding:18px 20px; background:#ffffff; box-shadow:0 1px 4px rgba(0,0,0,.07); font-size:14px; line-height:1.55; color:#222; margin-bottom:10px; }
+.rev-banner { display:inline-block; padding:6px 12px; border-radius:999px; font-weight:700; font-size:13px; margin-bottom:14px; }
+.rev-warn { background:#fef3c7; color:#92400e; }
+.rev-ok { background:#dcfce7; color:#166534; }
+.rev-missing { color:#92400e; margin:0 0 10px; }
+.rev-card h4 { margin:16px 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; }
+.rev-row { margin:3px 0; }
+.rev-k { display:inline-block; min-width:95px; font-weight:600; color:#374151; }
+.rev-card ul { margin:6px 0 4px 20px; padding:0; }
+.rev-card li { margin:3px 0; }
