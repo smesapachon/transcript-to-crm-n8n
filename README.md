@@ -13,12 +13,21 @@ Integrated Solutions**, a lighting and home-automation manufacturers' rep agency
 <img width="1004" height="473" alt="image" src="https://github.com/user-attachments/assets/1173e6c2-8932-4592-8909-b0d7176d0b52" />
 
 
-**Review UI: extracted fields, domain classification and risk flags (GitHub Pages)**
+**Input (GitHub Pages): paste the transcript**
 
-<img width="838" height="555" alt="image" src="https://github.com/user-attachments/assets/e09f0420-1fad-4a5d-8fd1-b52929275374" />
-<img width="837" height="845" alt="image" src="https://github.com/user-attachments/assets/b429d4ca-cab0-4335-bd8d-34670e87eb83" />
-<img width="826" height="439" alt="image" src="https://github.com/user-attachments/assets/0a3a866e-4fd2-43ad-b1f1-6e50021fd969" />
-<img width="1546" height="548" alt="image" src="https://github.com/user-attachments/assets/681bd259-c04b-4db8-9b5b-161aae812ddc" />
+<img width="838" height="555" alt="Input page" src="https://github.com/user-attachments/assets/e09f0420-1fad-4a5d-8fd1-b52929275374" />
+
+**Review card: extracted fields, domain classification and risk flags**
+
+<img width="837" height="845" alt="Review card" src="https://github.com/user-attachments/assets/b429d4ca-cab0-4335-bd8d-34670e87eb83" />
+
+**Reviewer edits and approves (or rejects)**
+
+<img width="826" height="439" alt="Reviewer decision" src="https://github.com/user-attachments/assets/0a3a866e-4fd2-43ad-b1f1-6e50021fd969" />
+
+**The approved record in Supabase**
+
+<img width="1546" height="548" alt="Supabase record" src="https://github.com/user-attachments/assets/681bd259-c04b-4db8-9b5b-161aae812ddc" />
 
 
 
