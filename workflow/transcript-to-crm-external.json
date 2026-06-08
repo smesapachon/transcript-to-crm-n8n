@@ -10,27 +10,27 @@
           "allowedOrigins": "*"
         }
       },
-      "id": "wh-extract-0001",
+      "id": "e8fc4075-8c57-4ecb-be11-57002d4f55e2",
       "name": "Webhook Extract",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1120,
-        0
+        2432,
+        1104
       ],
       "webhookId": "wh-extract-aaaa"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst transcript = (b.transcript || b.text || '').toString().trim();\nif (!transcript) { throw new Error('No transcript provided.'); }\nconst source = (b.source || 'manual').toString();\n\nconst SYSTEM_PROMPT = [\n  'You are a sales-call data extraction assistant for Bell & McCoy Integrated Solutions, a lighting and home-automation manufacturers rep agency serving the luxury home market. Read the transcript and return ONLY one valid JSON object, no markdown. Keys:',\n  '- company_name: account/company name, or null',\n  '- contact_name: the person name, or null',\n  '- summary: 2 to 3 factual sentences, no invented details',\n  '- action_items: array of short imperative strings; empty array if none',\n  '- order_intent: object with present (boolean), products (array of objects with name and quantity), timeline (string or null), notes (string or null)',\n  '- project_name: the project or job the call is about, or null',\n  '- customer_type: caller role, one of: architect, designer, builder, home automation integrator, window treatment, landscape, contractor, homeowner, other',\n  '- product_category: best-fit line, one of: lighting control, automated shading, LED and architectural lighting, landscape lighting, outdoor audio, whole-home surge, outdoor living, other',\n  '- territory_state: the US state the project is in (2-letter code), or null',\n  '- priority: high, medium, or low (high when there is a tight deadline or the deal is being pushed)',\n  '- risk_flags: array using ONLY these values: pricing_objection, late_delivery_complaint, competitor_mentioned, timeline_risk, spec_change. Include EVERY flag that applies (more than one is common). competitor_mentioned applies whenever the caller references a competitor or a competing/cheaper quote (e.g. \"higher than the competitor\"). timeline_risk applies when there is schedule pressure (e.g. \"the GC is pushing us\"). Empty array if none.',\n  '- missing_or_ambiguous: array of field names you could not confidently fill',\n  '- confidence: one of high, medium, low',\n  '- needs_human_review: boolean',\n  '',\n  'Rules:',\n  '- Never invent facts. If a value is not clearly stated, use null (or empty array, or present false) and add the field name to missing_or_ambiguous.',\n  '- If the caller references a previous deal instead of specifics, do not guess products: set order_intent.present true, leave products empty, and explain in notes and missing_or_ambiguous.',\n  '- Record pricing objections, deadlines and callback requests as action_items.',\n  '- For risk_flags, scan the WHOLE transcript and include ALL that apply. A call that complains about price AND mentions a competitor gets BOTH pricing_objection and competitor_mentioned.',\n  '- For customer_type and product_category pick the closest option; if unclear use other.',\n  '- Set needs_human_review true and confidence low whenever company_name or contact_name is missing, or products or quantities are implied but unknown.',\n  'Return only the JSON object.'\n].join('\\n');\n\nconst body = {\n  model: 'gpt-4o-mini', temperature: 0,\n  response_format: { type: 'json_object' },\n  messages: [\n    { role: 'system', content: SYSTEM_PROMPT },\n    { role: 'user', content: 'Transcript:\\n\\n' + transcript }\n  ]\n};\n\nreturn [{ json: { transcript, source, received_at: new Date().toISOString(), body } }];"
+        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst transcript = (b.transcript || b.text || '').toString().trim();\nif (!transcript) { throw new Error('No transcript provided.'); }\nconst source = (b.source || 'manual').toString();\n\nconst SYSTEM_PROMPT = [\n  'You are a sales-call data extraction assistant for Bell & McCoy Integrated Solutions, a lighting and home-automation manufacturers rep agency serving the luxury home market. Read the transcript and return ONLY one valid JSON object, no markdown. Keys:',\n  '- company_name: account/company name, or null',\n  '- contact_name: the person name, or null',\n  '- summary: 2 to 3 factual sentences, no invented details',\n  '- action_items: array of short imperative strings; empty array if none',\n  '- order_intent: object with present (boolean), products (array of objects with name and quantity), timeline (string or null), notes (string or null)',\n  '- project_name: the project or job the call is about, or null',\n  '- customer_type: caller role, one of: architect, designer, builder, home automation integrator, window treatment, landscape, contractor, homeowner, other',\n  '- product_category: best-fit line, one of: lighting control, automated shading, LED and architectural lighting, landscape lighting, outdoor audio, whole-home surge, outdoor living, other',\n  '- territory_state: the US state the project is in (2-letter code), or null',\n  '- priority: high, medium, or low (high when there is a tight deadline or the deal is being pushed)',\n  '- risk_flags: array using ONLY these values: pricing_objection, late_delivery_complaint, competitor_mentioned, timeline_risk, spec_change. Include EVERY flag that applies (more than one is common). competitor_mentioned applies whenever the caller references a competitor or a competing/cheaper quote (e.g. \"higher than the competitor\"). timeline_risk applies when there is schedule pressure (e.g. \"the GC is pushing us\"). Empty array if none.',\n  '- missing_or_ambiguous: array of field names you could not confidently fill',\n  '- confidence: one of high, medium, low',\n  '- needs_human_review: boolean',\n  '',\n  'Rules:',\n  '- Never invent facts. If a value is not clearly stated, use null (or empty array, or present false) and add the field name to missing_or_ambiguous.',\n  '- If the caller references a previous deal instead of specifics, do not guess products: set order_intent.present true, leave products empty, and explain in notes and missing_or_ambiguous.',\n  '- Record pricing objections, deadlines and callback requests as action_items.',\n  '- For risk_flags, scan the WHOLE transcript and include ALL that apply. A call that complains about price AND mentions a competitor gets BOTH pricing_objection and competitor_mentioned.',\n  '- For customer_type and product_category pick the closest option; if unclear use other.',\n  '- Set needs_human_review true and confidence low whenever company_name or contact_name is missing, or products or quantities are implied but unknown.',\n  'Return only the JSON object.'\n].join('\\n');\n\nconst body = {\n  model: 'gpt-4o-mini', temperature: 0,\n  response_format: { type: 'json_object' },\n  messages: [\n    { role: 'system', content: SYSTEM_PROMPT },\n    { role: 'user', content: 'Transcript:\\n\\n' + transcript }\n  ]\n};\n\nreturn [{ json: { transcript, source, received_at: new Date().toISOString(), body } }];\n\n"
       },
-      "id": "norm-0001",
+      "id": "72f615fb-770b-430d-bd35-534d76cf6fa9",
       "name": "Normalize & Build Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -900,
-        0
+        2656,
+        1104
       ]
     },
     {
@@ -44,13 +44,13 @@
         "jsonBody": "={{ $json.body }}",
         "options": {}
       },
-      "id": "llm-0001",
+      "id": "3218381e-8fa5-4ba3-8ec8-ef5bc3a42874",
       "name": "LLM Extract",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -680,
-        0
+        2880,
+        1104
       ],
       "credentials": {
         "openAiApi": {
@@ -63,13 +63,13 @@
       "parameters": {
         "jsCode": "const raw = $input.first().json;\nlet content = '';\ntry { content = raw.choices[0].message.content; } catch (e) { content = ''; }\ncontent = (content || '').replace(/```json/gi, '').replace(/```/g, '').trim();\n\nlet data; let parseError = false;\ntry { data = JSON.parse(content); } catch (e) { data = {}; parseError = true; }\n\nconst norm = $('Normalize & Build Request').first().json;\n\nconst missing = Array.isArray(data.missing_or_ambiguous) ? data.missing_or_ambiguous.slice() : [];\nif (!data.company_name && missing.indexOf('company_name') === -1) missing.push('company_name');\nif (!data.contact_name && missing.indexOf('contact_name') === -1) missing.push('contact_name');\n\nconst confidence = data.confidence || (parseError ? 'low' : 'medium');\nconst needsReview = parseError || data.needs_human_review === true || missing.length > 0 || confidence === 'low';\n\nreturn [{ json: { extracted: data, missing, confidence, needs_review: needsReview, transcript: norm.transcript, source: norm.source } }];"
       },
-      "id": "val-0001",
+      "id": "2fa6afc4-6a67-4cd7-93d2-ed4d0f2cb24e",
       "name": "Validate & Flag Gaps",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -460,
-        0
+        3104,
+        1104
       ]
     },
     {
@@ -78,13 +78,13 @@
         "responseBody": "={{ { extracted: $json.extracted, missing: $json.missing, confidence: $json.confidence, needs_review: $json.needs_review, transcript: $json.transcript, source: $json.source } }}",
         "options": {}
       },
-      "id": "resp-extract-0001",
+      "id": "ede7cd23-9a8b-4916-8b11-accfcba65b98",
       "name": "Respond Extract",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        -240,
-        0
+        3312,
+        1104
       ]
     },
     {
@@ -96,27 +96,27 @@
           "allowedOrigins": "*"
         }
       },
-      "id": "wh-save-0001",
+      "id": "bc9ad72f-dee7-4a8c-99c2-92f57bbcd37e",
       "name": "Webhook Save",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1120,
-        320
+        2432,
+        1424
       ],
       "webhookId": "wh-save-bbbb"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst ex = b.extracted || {};\n\nconst company = (b.company_name || ex.company_name || '').toString().trim() || null;\nconst contact = (b.contact_name || ex.contact_name || '').toString().trim() || null;\nconst decision = (b.decision || 'Reject').toString();\nconst approved = decision.toLowerCase().indexOf('approve') !== -1;\nconst notes = (b.reviewer_notes || '').toString();\nconst territory = ex.territory_state || 'n/a';\nconst prio = ex.priority || 'n/a';\nconst flags = Array.isArray(ex.risk_flags) ? ex.risk_flags : [];\n\nlet missing = Array.isArray(b.missing) ? b.missing.slice() : (Array.isArray(ex.missing_or_ambiguous) ? ex.missing_or_ambiguous.slice() : []);\nif (company) missing = missing.filter(m => m !== 'company_name');\nif (contact) missing = missing.filter(m => m !== 'contact_name');\n\nconst nextSteps = [];\nif (missing.length) nextSteps.push('Call ' + (contact || 'the contact') + ' back to collect: ' + missing.join(', '));\n(Array.isArray(ex.action_items) ? ex.action_items : []).forEach(a => nextSteps.push(a));\nif (flags.indexOf('pricing_objection') !== -1) nextSteps.push('Revisit pricing - a price objection was raised');\nif (flags.indexOf('competitor_mentioned') !== -1) nextSteps.push('Position against the competitor mentioned');\nif (flags.indexOf('late_delivery_complaint') !== -1) nextSteps.push('Confirm delivery timeline to avoid a repeat complaint');\nif (!nextSteps.length) nextSteps.push('Prepare the quote and follow up');\n\nconst oi = ex.order_intent || {};\nconst prods = (oi.products || []).map(p => '  - ' + p.name + (p.quantity ? (' x' + p.quantity) : '')).join('\\n') || '  (none specified)';\n\nconst notifyBody = [\n  (missing.length ? '** FOLLOW-UP NEEDED - some fields are missing **' : '** Ready to action **'),\n  '',\n  'Account:       ' + (company || 'Unknown'),\n  'Contact:       ' + (contact || 'n/a'),\n  'Project:       ' + (ex.project_name || 'n/a'),\n  'Territory:     ' + territory,\n  'Product line:  ' + (ex.product_category || 'n/a'),\n  'Customer type: ' + (ex.customer_type || 'n/a'),\n  'Priority:      ' + prio,\n  'Risk flags:    ' + (flags.join(', ') || 'none'),\n  '',\n  'Summary: ' + (ex.summary || ''),\n  '',\n  'Order intent: ' + (oi.present ? 'YES' : 'no'),\n  prods,\n  'Timeline: ' + (oi.timeline || 'n/a'),\n  '',\n  'NEXT STEPS:',\n  nextSteps.map(s => '  - ' + s).join('\\n'),\n  '',\n  'Reviewer notes: ' + (notes || '(none)')\n].join('\\n');\n\nconst subject = (missing.length ? '[Follow-up] ' : '[New opportunity] ')\n  + (company || 'Unknown') + ' - ' + territory + ', ' + prio + ' priority';\n\nreturn [{ json: {\n  decision, approved, reviewer_notes: notes,\n  notify: { subject: subject, body: notifyBody },\n  record: {\n    company_name: company,\n    contact_name: contact,\n    summary: ex.summary || null,\n    action_items: JSON.stringify(ex.action_items || []),\n    order_intent: JSON.stringify(ex.order_intent || {}),\n    project_name: ex.project_name || null,\n    customer_type: ex.customer_type || null,\n    product_category: ex.product_category || null,\n    territory_state: ex.territory_state || null,\n    priority: ex.priority || null,\n    risk_flags: JSON.stringify(ex.risk_flags || []),\n    missing_fields: JSON.stringify(missing),\n    confidence: b.confidence || 'low',\n    status: approved ? 'approved' : 'rejected',\n    source: b.source || 'manual',\n    raw_transcript: b.transcript || ''\n  }\n} }];"
+        "jsCode": "const input = $input.first().json;\nconst b = input.body || input;\nconst ex = b.extracted || {};\n\nconst company = (b.company_name || ex.company_name || '').toString().trim() || null;\nconst contact = (b.contact_name || ex.contact_name || '').toString().trim() || null;\nconst decision = (b.decision || 'Reject').toString();\nconst approved = decision.toLowerCase().indexOf('approve') !== -1;\nconst notes = (b.reviewer_notes || '').toString();\nconst territory = ex.territory_state || 'n/a';\nconst prio = ex.priority || 'n/a';\nconst flags = Array.isArray(ex.risk_flags) ? ex.risk_flags : [];\n\nlet missing = Array.isArray(b.missing) ? b.missing.slice() : (Array.isArray(ex.missing_or_ambiguous) ? ex.missing_or_ambiguous.slice() : []);\nif (company) missing = missing.filter(m => m !== 'company_name');\nif (contact) missing = missing.filter(m => m !== 'contact_name');\n\nconst nextSteps = [];\nif (missing.length) nextSteps.push('Call ' + (contact || 'the contact') + ' back to collect: ' + missing.join(', '));\n(Array.isArray(ex.action_items) ? ex.action_items : []).forEach(a => nextSteps.push(a));\nif (flags.indexOf('pricing_objection') !== -1) nextSteps.push('Revisit pricing - a price objection was raised');\nif (flags.indexOf('competitor_mentioned') !== -1) nextSteps.push('Position against the competitor mentioned');\nif (flags.indexOf('late_delivery_complaint') !== -1) nextSteps.push('Confirm delivery timeline to avoid a repeat complaint');\nif (!nextSteps.length) nextSteps.push('Prepare the quote and follow up');\n\nconst oi = ex.order_intent || {};\nconst prods = (oi.products || []).map(p => '  - ' + p.name + (p.quantity ? (' x' + p.quantity) : '')).join('\\n') || '  (none specified)';\n\nconst notifyBody = [\n  (missing.length ? '** FOLLOW-UP NEEDED - some fields are missing **' : '** Ready to action **'),\n  '',\n  'Account:       ' + (company || 'Unknown'),\n  'Contact:       ' + (contact || 'n/a'),\n  'Project:       ' + (ex.project_name || 'n/a'),\n  'Territory:     ' + territory,\n  'Product line:  ' + (ex.product_category || 'n/a'),\n  'Customer type: ' + (ex.customer_type || 'n/a'),\n  'Priority:      ' + prio,\n  'Risk flags:    ' + (flags.join(', ') || 'none'),\n  '',\n  'Summary: ' + (ex.summary || ''),\n  '',\n  'Order intent: ' + (oi.present ? 'YES' : 'no'),\n  prods,\n  'Timeline: ' + (oi.timeline || 'n/a'),\n  '',\n  'NEXT STEPS:',\n  nextSteps.map(s => '  - ' + s).join('\\n'),\n  '',\n  'Reviewer notes: ' + (notes || '(none)')\n].join('\\n');\n\nconst subject = (missing.length ? '[Follow-up] ' : '[New opportunity] ')\n  + (company || 'Unknown') + ' - ' + territory + ', ' + prio + ' priority';\n\nreturn [{ json: {\n  decision, approved, reviewer_notes: notes,\n  notify: { subject: subject, body: notifyBody },\n  record: {\n    company_name: company,\n    contact_name: contact,\n    summary: ex.summary || null,\n    action_items: JSON.stringify(ex.action_items || []),\n    order_intent: JSON.stringify(ex.order_intent || {}),\n    project_name: ex.project_name || null,\n    customer_type: ex.customer_type || null,\n    product_category: ex.product_category || null,\n    territory_state: ex.territory_state || null,\n    priority: ex.priority || null,\n    risk_flags: JSON.stringify(ex.risk_flags || []),\n    missing_fields: JSON.stringify(missing),\n    confidence: b.confidence || 'low',\n    status: approved ? 'approved' : 'rejected',\n    source: b.source || 'manual',\n    raw_transcript: b.transcript || ''\n  }\n} }];\n"
       },
-      "id": "apply-0001",
+      "id": "83c6c3d9-8d1d-4506-aaf1-35c2ac00906f",
       "name": "Apply Edits & Decision",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -900,
-        320
+        2656,
+        1424
       ]
     },
     {
@@ -144,13 +144,13 @@
         },
         "options": {}
       },
-      "id": "if-0001",
+      "id": "4306840d-3660-4a12-a690-b338fcf4ceaf",
       "name": "Approved?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -680,
-        320
+        2880,
+        1424
       ]
     },
     {
@@ -184,17 +184,188 @@
             "status": "={{ $json.record.status }}",
             "source": "={{ $json.record.source }}",
             "raw_transcript": "={{ $json.record.raw_transcript }}"
-          }
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_items",
+              "displayName": "action_items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_intent",
+              "displayName": "order_intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "raw_transcript",
+              "displayName": "raw_transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "project_name",
+              "displayName": "project_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_type",
+              "displayName": "customer_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_category",
+              "displayName": "product_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "territory_state",
+              "displayName": "territory_state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_flags",
+              "displayName": "risk_flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
-      "id": "ins-0001",
+      "id": "b3d47e82-18c3-4cd7-b1be-c7d6f564a349",
       "name": "Insert into CRM",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        -460,
-        220
+        3104,
+        1328
       ],
       "credentials": {
         "postgres": {
@@ -205,25 +376,25 @@
     },
     {
       "parameters": {
-        "sendTo": "REPLACE_WITH_YOUR_EMAIL@gmail.com",
+        "sendTo": "s.mesapachon@gmail.com",
         "subject": "={{ $('Apply Edits & Decision').first().json.notify.subject }}",
         "emailType": "text",
         "message": "={{ $('Apply Edits & Decision').first().json.notify.body }}",
         "options": {}
       },
-      "id": "gmail-0001",
+      "id": "59fc613d-0db5-4a97-b5dd-376493a008fb",
       "name": "Notify Rep",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        -240,
-        220
+        3312,
+        1328
       ],
       "webhookId": "gmail-cccc",
       "credentials": {
         "gmailOAuth2": {
-          "id": "REPLACE_GMAIL_CRED",
-          "name": "Gmail account"
+          "id": "6lU6j2ewEhxJ9APW",
+          "name": "Gmail OAuth2 API"
         }
       }
     },
@@ -233,13 +404,13 @@
         "responseBody": "={{ { status: 'saved', message: 'Record approved and written to the CRM.' } }}",
         "options": {}
       },
-      "id": "resp-saved-0001",
+      "id": "c3f42a9e-816f-40bb-9816-6746743502ac",
       "name": "Respond Saved",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        -20,
-        220
+        3536,
+        1328
       ]
     },
     {
@@ -248,13 +419,13 @@
         "responseBody": "={{ { status: 'rejected', message: 'Record rejected. Nothing saved.' } }}",
         "options": {}
       },
-      "id": "resp-rej-0001",
+      "id": "c96fae53-b18b-4309-9231-ee9ae351e2e3",
       "name": "Respond Rejected",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        -460,
-        420
+        3104,
+        1536
       ]
     }
   ],
@@ -367,11 +538,16 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
+  "versionId": "1c3daed4-135d-4944-ab88-d791d43023bf",
   "meta": {
-    "templateCredsSetupCompleted": true
-  }
+    "templateCredsSetupCompleted": true,
+    "instanceId": "673ce8edb07dd773c9e1e96ec902138e6daf79714c4229cc030cc23ca73e861f"
+  },
+  "id": "RBX4pl8W5n0tYfGC",
+  "tags": []
 }
