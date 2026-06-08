@@ -6,6 +6,16 @@ Integrated Solutions** — a lighting & home-automation manufacturers' rep agenc
 
 **Live demo (review UI on GitHub Pages):** https://smesapachon.github.io/transcript-to-crm-n8n/
 
+## Screenshots
+
+**n8n workflow (canvas)**
+
+![n8n canvas](assets/canvas.png)
+
+**Review UI — extracted fields, domain classification & risk flags (GitHub Pages)**
+
+![Review card](assets/review-card.png)
+
 ## What it does
 
 ```
@@ -25,7 +35,7 @@ human reviews it — and the reviewer can correct fields inline before approving
 
 ## Stack
 - **n8n** (cloud) — orchestration, two webhooks (extract + save).
-- **OpenAI** `gpt-4o-mini`, `temperature 0`, `response_format: json_object` — extraction.
+- **OpenAI** `gpt-4o-mini`, `temperature 0`, `response_format: json_object` — chosen for low cost/latency; plenty for structured extraction.
 - **Supabase / Postgres** — system of record.
 - **GitHub Pages** — the input + review UI (`docs/index.html`), full design control.
 - **Gmail** — notifies the territory rep on approval.
@@ -60,14 +70,24 @@ with the gaps surfaced for the human to complete.
 4. Activate the workflow, copy the two production webhook URLs into `docs/index.html` (`EXTRACT_URL`, `SAVE_URL`).
 5. Open the GitHub Pages URL, paste a transcript from `samples/`, review, approve.
 
-> A self-contained, single-workflow variant using n8n's native form (no external page) is in
-> `workflow/transcript-to-crm.json`.
+**Primary workflow:** `workflow/transcript-to-crm-external.json` (used by the GitHub Pages UI).
+A self-contained variant using n8n's native form (no external page) is in
+`workflow/transcript-to-crm.json`.
+
+> On re-import, the n8n Postgres node may auto-add an `id` mapping to the Insert — remove it
+> (`id` is a generated identity column). The JSON-shaped fields are stored as `text` to avoid
+> n8n validating jsonb columns as objects; a production build would use jsonb via the Supabase
+> REST API.
 
 ## What I'd add before production
+- **Auth + rate limiting on the webhooks.** They're currently open — anyone with the URL can
+  POST (junk records, or burn the LLM budget). I'd add a shared-secret header / signed
+  requests and throttling.
+- **Retries + error handling on the LLM call** (and a dead-letter for unparseable responses);
+  today an OpenAI hiccup surfaces as a generic failure.
+- **Idempotency** — dedupe by transcript hash so the same call isn't saved twice.
 - **Account-history lookup** to resolve "same as the school job" against prior orders (repeat business is core to a rep agency).
-- **Product/SKU catalog matching** (e.g. map "40 wireless dimmers" to Lutron part numbers).
-- **Auto-route to the territory rep** based on `territory_state`; draft-quote generation from `order_intent`.
-- Idempotency (dedupe by transcript hash), retries + dead-letter on the LLM call, and the service key behind a credential.
+- **Product/SKU catalog matching** (e.g. map "40 wireless dimmers" to Lutron part numbers); auto-route to the territory rep by `territory_state`; draft-quote generation from `order_intent`.
 
 ## What I'd do differently with more time
 - Let the reviewer edit every field (products, summary), not just the names.
