@@ -10,7 +10,8 @@ Integrated Solutions**, a lighting and home-automation manufacturers' rep agency
 
 **n8n workflow (canvas)**
 
-![n8n canvas](assets/canvas.png)
+<img width="1004" height="473" alt="image" src="https://github.com/user-attachments/assets/1173e6c2-8932-4592-8909-b0d7176d0b52" />
+
 
 **Review UI: extracted fields, domain classification and risk flags (GitHub Pages)**
 
