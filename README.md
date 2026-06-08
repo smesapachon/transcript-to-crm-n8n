@@ -18,6 +18,7 @@ Integrated Solutions**, a lighting and home-automation manufacturers' rep agency
 <img width="838" height="555" alt="image" src="https://github.com/user-attachments/assets/e09f0420-1fad-4a5d-8fd1-b52929275374" />
 <img width="837" height="845" alt="image" src="https://github.com/user-attachments/assets/b429d4ca-cab0-4335-bd8d-34670e87eb83" />
 <img width="826" height="439" alt="image" src="https://github.com/user-attachments/assets/0a3a866e-4fd2-43ad-b1f1-6e50021fd969" />
+<img width="1546" height="548" alt="image" src="https://github.com/user-attachments/assets/681bd259-c04b-4db8-9b5b-161aae812ddc" />
 
 
 
