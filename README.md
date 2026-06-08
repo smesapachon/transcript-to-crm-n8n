@@ -15,7 +15,7 @@ Integrated Solutions**, a lighting and home-automation manufacturers' rep agency
 
 **Review UI: extracted fields, domain classification and risk flags (GitHub Pages)**
 
-![Review card](assets/review-card.png)
+<img width="838" height="555" alt="image" src="https://github.com/user-attachments/assets/e09f0420-1fad-4a5d-8fd1-b52929275374" />
 
 ## What it does
 
